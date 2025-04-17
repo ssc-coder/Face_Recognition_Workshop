@@ -2,7 +2,8 @@ import os
 import requests
 
 # Get API key
-api_key = os.getenv("OPENAI_API_KEY")
+
+api_key = os.getenv("OPEN_AI_KEY")
 endpoint = "https://api.openai.com/v1/chat/completions"
 
 headers = {
@@ -10,30 +11,40 @@ headers = {
     "Authorization": f"Bearer {api_key}"
 }
 
+class chatbot:
+    def __init__(self, message:list[dict[str, str]]):
+        self.data = {
+            "model": "gpt-3.5-turbo",
+            "messages": message,
+            "max_tokens": 1000
+        }
+
 # Start chat history with system message
+role = input("What role would you like the assistant to take on?: ")
+
+if "You are a" not in role:
+    role = "You are a " + f"{role}. "
+
 messages = [
-    {"role": "system", "content": "You are a friendly and funny assistant."}
+    {"role": "system", "content": role}
 ]
 
-print("🤖 Chatbot is ready! Type 'exit' to quit.\n")
+agent = chatbot(messages)
+
+print("🤖 assistant is ready! Type 'exit' to quit.\n")
 
 while True:
-    user_input = input("You: ")
+    user_input = input("You: ") # required for the main loop execution and communication with the model/API
 
-    if user_input.lower() in ["exit", "quit"]:
+    if user_input.lower() in ["exit", "quit"]: # key condition to end the while loop
         print("👋 Bye!")
         break
 
     # Add user message to the conversation
-    messages.append({"role": "user", "content": user_input})
+    agent.data["messages"].append({"role": "user", "content": role + user_input})
 
-    data = {
-        "model": "gpt-3.5-turbo",
-        "messages": messages,
-        "max_tokens": 100
-    }
 
-    response = requests.post(endpoint, headers=headers, json=data)
+    response = requests.post(endpoint, headers=headers, json=agent.data)
 
     if response.status_code == 200:
         result = response.json()
@@ -43,3 +54,6 @@ while True:
     else:
         print("Error:", response.status_code)
         print(response.text)
+
+
+
